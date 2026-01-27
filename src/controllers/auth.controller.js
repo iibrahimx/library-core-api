@@ -1,9 +1,10 @@
 const User = require("../models/user.model");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-// @desc Register a new user
-// @route POST /api/auth/register
-// @access Public
+// @desc    Register a new user
+// @route   POST /api/auth/register
+// @access  Public
 const registerUser = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
@@ -48,4 +49,57 @@ const registerUser = async (req, res, next) => {
   }
 };
 
-module.exports = { registerUser };
+// @desc    Login user
+// @route   POST /api/authlogin
+// @access  Public
+const loginUser = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      res.status(400);
+      throw new Error("Email and password are required");
+    }
+
+    // Find user by email (but MongoDB returns the whole user document)
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      res.status(401);
+      throw new Error("Invalid credentials");
+    }
+
+    // Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      res.status(401);
+      throw new Error("Invalid credentials");
+    }
+
+    // Create JWT
+    const token = jwt.sign(
+      {
+        user: {
+          id: user._id,
+          email: user.email,
+          role: user.role,
+        },
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
+
+    // Send token
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { registerUser, loginUser };
