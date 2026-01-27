@@ -13,7 +13,7 @@ app.use(express.json());
 app.use("/api/books", bookRoutes);
 app.use("/api/authors", authorRoutes);
 
-// 404 handler
+// 404 handler (routes that don't exist)
 app.use(notFound);
 
 // Global error handler
