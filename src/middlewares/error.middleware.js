@@ -9,7 +9,7 @@ const errorHandler = (err, req, res, next) => {
     title: getErrorTitle(statusCode),
     message: err.message || "An unexpected error occurred",
     // Only show stack trace in development mode
-    stack: process.env.NODE_ENV === "production" ? null : err.stack,
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 };
 
